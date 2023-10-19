@@ -1,4 +1,4 @@
 import './styles.scss';
-import 'bootstrap';
-
+import validation from './validation.js';
+validation();
 console.log('Hello World!');

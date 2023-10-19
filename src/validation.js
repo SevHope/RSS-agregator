@@ -1,6 +1,6 @@
-import onChange from 'on-change';
-import * as yup from 'yup';
-import axios from 'axios';
+//import onChange from 'on-change';
+//import * as yup from 'yup';
+//import axios from 'axios';
 
 const input = document.getElementById('url-input');
 const submit = document.querySelector("button[type = 'submit']");
@@ -23,12 +23,15 @@ const validate = (fields) => {
     errors: [],
   };
 
-form.addEventListener('submit', (e) => {
+const validation = () => {
+    form.addEventListener('submit', (e) => {
     e.preventDefault();
     state.link = input.value;
-    const error = validate(state.link);
+    //const error = validate(state.link);
     console.log(input.value);
-    console.log(state.link);
-    console.log(error);
+    //console.log(state.link);
+    //console.log(error);
 });
+}
+export default validation;
 
