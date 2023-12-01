@@ -3,7 +3,20 @@ import * as yup from 'yup';
 import render from './render.js';
 import i18next from 'i18next';
 
-export default () => {
+export default async () => {
+
+  await i18next.init({
+    lng: 'ru', // Текущий язык
+    debug: true,
+    resources: {
+      ru: { // Тексты конкретного языка
+        translation: { // Так называемый namespace по умолчанию
+          key: 'Привет мир!',
+        },
+      },
+    },
+  });
+
   const elements = {
     form: document.querySelector('.rss-form'),
     input: document.getElementById('url-input'),
@@ -36,13 +49,14 @@ export default () => {
       return { link: e.message };
     });
 
-  const state = onChange(initialState, () => render(elements, state));
+  //const state = onChange(initialState, () => );
+
+  const state = onChange(initialState, (path, value, previousValue) => render(elements, state));
 
   elements.form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const { value } = elements.input;
-    state.form.link = value;
-    const errors = await validateLink(state.form.link, state);
+    const errors = await validateLink(value, state);
     state.form.errors = errors;
   });
 };
