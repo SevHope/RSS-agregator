@@ -1,6 +1,7 @@
 import onChange from 'on-change';
 import * as yup from 'yup';
 import render from './render.js';
+import i18next from 'i18next';
 
 export default () => {
   const elements = {
@@ -21,13 +22,11 @@ export default () => {
   const schema = yup
     .string()
     .required()
-    .url();
+    .url()
+    .notOneOf(initialState.form.feeds)
 
   const validateLink = (link, state) => schema.validate(link)
     .then(() => {
-      if (state.form.feeds.includes(link)) {
-        throw new Error('Link must be unique');
-      }
       state.form.feeds.push(link);
       console.log('нет ошибки');
       return {};
