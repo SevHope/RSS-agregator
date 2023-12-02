@@ -1,6 +1,6 @@
-const render = (elements, state) => {
-  console.log(state.form.errors.link, 'текст ошибки');
-  if (state.form.errors.link) {
+const render = (elements, state, value) => {
+  console.log(value, 'value');
+  if (value === 'false') {
     elements.input.style.border = 'thick solid red';
   } else {
     elements.input.value = '';

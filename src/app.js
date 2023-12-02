@@ -4,59 +4,58 @@ import render from './render.js';
 import i18next from 'i18next';
 
 export default async () => {
-
-  await i18next.init({
-    lng: 'ru', // Текущий язык
-    debug: true,
-    resources: {
-      ru: { // Тексты конкретного языка
-        translation: { // Так называемый namespace по умолчанию
-          key: 'Привет мир!',
-        },
-      },
-    },
-  });
-
   const elements = {
     form: document.querySelector('.rss-form'),
     input: document.getElementById('url-input'),
     submit: document.querySelector("button[type = 'submit']"),
   };
 
-  const initialState = {
+  const state = {
     form: {
-      valid: true,
-      errors: [],
+      valid: null,
+      errors: {},
       feeds: [],
-      link: '',
     },
   };
 
-  const schema = yup
+  const watchedState = onChange(state, (path, value, previousValue) => {
+    console.log(path, 'path');
+    console.log(value, 'value');
+    if (path === 'form.valid') {
+      console.log('вызываем рендер');
+      render(elements, state, value);
+    }
+  });
+
+    const schema = yup
     .string()
     .required()
     .url()
-    .notOneOf(initialState.form.feeds)
+    .notOneOf(watchedState.form.feeds);
 
-  const validateLink = (link, state) => schema.validate(link)
+  const validateLink = (link, watchedState) => schema.validate(link)
     .then(() => {
-      state.form.feeds.push(link);
       console.log('нет ошибки');
+      watchedState.form.valid = 'true';
+      console.log(watchedState.form.valid, 'validnost');
+      watchedState.form.feeds.push(link);
+      console.log(watchedState.form.feeds, 'feeds');
       return {};
     })
     .catch((e) => {
       console.log('есть ошибка');
+      watchedState.form.valid = 'false';
+      console.log(watchedState.form.valid, 'validnost');
       return { link: e.message };
     });
 
-  //const state = onChange(initialState, () => );
-
-  const state = onChange(initialState, (path, value, previousValue) => render(elements, state));
-
   elements.form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const { value } = elements.input;
-    const errors = await validateLink(value, state);
-    state.form.errors = errors;
+    const formData = new FormData(e.target);
+    console.log(formData, 'formdata');
+    const value = formData.get('url');
+    console.log(value, 'value');
+    const errors = await validateLink(value, watchedState);
+    watchedState.form.errors = errors;
   });
 };
