@@ -31,23 +31,10 @@ export default async () => {
     .string()
     .required()
     .url()
-    .notOneOf(watchedState.form.feeds);
 
-  const validateLink = (link, watchedState) => schema.validate(link)
-    .then(() => {
-      console.log('нет ошибки');
-      watchedState.form.valid = 'true';
-      console.log(watchedState.form.valid, 'validnost');
-      watchedState.form.feeds.push(link);
-      console.log(watchedState.form.feeds, 'feeds');
-      return {};
-    })
-    .catch((e) => {
-      console.log('есть ошибка');
-      watchedState.form.valid = 'false';
-      console.log(watchedState.form.valid, 'validnost');
-      return { link: e.message };
-    });
+    const validateSchema = (feeds) => {
+      return schema.concat(yup.string().notOneOf(feeds));
+    };
 
   elements.form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -55,7 +42,21 @@ export default async () => {
     console.log(formData, 'formdata');
     const value = formData.get('url');
     console.log(value, 'value');
-    const errors = await validateLink(value, watchedState);
-    watchedState.form.errors = errors;
+    const dynamicSchema = validateSchema(watchedState.form.feeds);
+    dynamicSchema.validate(value)
+    .then(() => {
+      console.log('нет ошибки');
+      watchedState.form.valid = 'true';
+      console.log(watchedState.form.valid, 'validnost');
+      watchedState.form.feeds.push(value);
+      console.log(watchedState.form.feeds, 'feeds');
+      return {};
+    })
+    .catch((e) => {
+        console.log('есть ошибка');
+        watchedState.form.valid = 'false';
+        console.log(watchedState.form.valid, 'validnost');
+        return { value: e.message };
+    })
   });
 };
