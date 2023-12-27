@@ -86,6 +86,7 @@ const renderPosts = (state, elements) => {
 
 const renderDisplayedPost = (state, { modalHeader, modalBody, modalHref }, id) => {
   const posts = state.form.posts.filter((post) => post.id === id);
+  console.log(posts, 'posts');
   const [{ description, link, title }] = posts;
   modalHeader.textContent = title;
   modalBody.textContent = description;
