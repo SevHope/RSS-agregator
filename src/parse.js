@@ -27,7 +27,7 @@ const parse = (rss, url) => {
     description: feedDescription,
   };
 
-  const posts = [...data.querySelectorAll('item')].map(parsePost);
+  const posts = Array.from(data.querySelectorAll('item')).map((item) => parsePost(item));
   return { feed, posts };
 };
 

@@ -28,7 +28,7 @@ const renderFeeds = (message, state, elements) => {
   const ulForFeeds = document.createElement('ul');
   ulForFeeds.classList.add('list-group', 'border-0', 'rounded-0');
   feedsCard.append(ulForFeeds);
-  state.form.feeds.forEach(({ title, description }) => {
+  state.data.feeds.feedsData.forEach(({ title, description }) => {
     const li = document.createElement('li');
     li.classList.add('list-group-item', 'border-0', 'border-end-0');
     const liTitle = document.createElement('h3');
@@ -59,7 +59,7 @@ const renderPosts = (state, elements) => {
   const ulForPosts = document.createElement('ul');
   ulForPosts.classList.add('list-group', 'border-0', 'rounded-0');
   posts.append(ulForPosts);
-  state.form.posts.forEach((post) => {
+  state.data.posts.forEach((post) => {
     const li = document.createElement('li');
     ulForPosts.append(li);
     li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
@@ -85,8 +85,7 @@ const renderPosts = (state, elements) => {
 };
 
 const renderDisplayedPost = (state, { modalHeader, modalBody, modalHref }, id) => {
-  const posts = state.form.posts.filter((post) => post.id === id);
-  console.log(posts, 'posts');
+  const posts = state.data.posts.filter((post) => post.id === id);
   const [{ description, link, title }] = posts;
   modalHeader.textContent = title;
   modalBody.textContent = description;
@@ -94,14 +93,14 @@ const renderDisplayedPost = (state, { modalHeader, modalBody, modalHref }, id) =
 };
 
 const render = (state, elements, i18nextInstance, path) => {
-  if (path === 'error') {
-    const errorMessage = i18nextInstance.t(`errors.${state.error}`);
+  if (path === 'formState.error') {
+    const errorMessage = i18nextInstance.t(`errors.${state.formState.error}`);
     renderErrors(errorMessage, elements);
-  } if (path === 'form.feeds') {
+  } if (path === 'data.feeds.feedsData') {
     const successMessage = i18nextInstance.t('success');
     renderFeeds(successMessage, state, elements);
     renderPosts(state, elements);
-  } if (path === 'form.posts' || path === 'uiState.viewedPostIds') {
+  } if (path === 'data.posts' || path === 'uiState.viewedPostIds') {
     renderPosts(state, elements);
   } if (path === 'uiState.displayedPost') {
     renderDisplayedPost(state, elements, state.uiState.displayedPost);

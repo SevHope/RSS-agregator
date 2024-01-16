@@ -14,26 +14,23 @@ const addProxy = (url) => {
   return proxyUrl.toString();
 };
 
-const getData = (url) => axios.get(addProxy(url));
-
-const addIds = (posts, feedId) => {
-  posts.forEach((post) => {
-    post.id = uniqueId();
-    post.feedId = feedId;
-  });
-};
+const addIds = (posts, feedId) => posts.map((post) => ({
+  ...post,
+  id: uniqueId(),
+  feedId,
+}));
 
 const updatePosts = (watchedState) => {
-  const promises = watchedState.form.feeds.map((feed) => getData(feed.link)
+  const promises = watchedState.data.feeds.feedsData.map((feed) => axios.get(addProxy(feed.link))
     .then((response) => {
       const { posts } = parse(response.data.contents);
-      const postsFromState = watchedState.form.posts;
+      const postsFromState = watchedState.data.posts;
       const postsWithCurrentId = postsFromState.filter((post) => post.feedId === feed.id);
       const displayedPostLinks = postsWithCurrentId.map((post) => post.link);
       const newPosts = posts.filter((post) => !displayedPostLinks.includes(post.link));
       if (!isEmpty(newPosts)) {
         addIds(newPosts, feed.id);
-        watchedState.form.posts.unshift(...newPosts);
+        watchedState.data.posts.unshift(...newPosts);
       }
     })
     .catch((error) => {
@@ -45,9 +42,9 @@ const updatePosts = (watchedState) => {
 const handleData = (data, watchedState) => {
   const { feed, posts } = data;
   feed.id = uniqueId();
-  watchedState.form.feeds.push(feed);
+  watchedState.data.feeds.feedsData.push(feed);
   addIds(posts, feed.id);
-  watchedState.form.posts.push(...posts);
+  watchedState.data.posts.push(...posts);
 };
 
 const handleError = (error) => {
@@ -74,7 +71,7 @@ export default async () => {
   });
 
   const i18nextInstance = i18next.createInstance();
-  await i18nextInstance.init({
+  i18nextInstance.init({
     lng: 'ru',
     debug: true,
     resources,
@@ -94,9 +91,15 @@ export default async () => {
   };
 
   const state = {
-    form: {
-      links: [],
-      feeds: [],
+    formState: {
+      status: 'filling',
+      error: null,
+    },
+    data: {
+      feeds: {
+        feedsData: [],
+        links: [],
+      },
       posts: [],
     },
     uiState: {
@@ -106,7 +109,6 @@ export default async () => {
     modal: {
       postId: null,
     },
-    error: null,
   };
 
   const watchedState = onChange(state, (path) => {
@@ -124,16 +126,16 @@ export default async () => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const url = formData.get('url');
-    const dynamicSchema = validateSchema(watchedState.form.links);
+    const dynamicSchema = validateSchema(watchedState.data.feeds.links);
     dynamicSchema.validate(url)
-      .then(() => getData(url))
+      .then(() => axios.get(addProxy(url)))
       .then((response) => {
         const data = parse(response.data.contents, url);
         handleData(data, watchedState);
-        watchedState.form.links.push(url);
+        watchedState.data.feeds.links.push(url);
       })
       .catch((err) => {
-        watchedState.error = handleError(err);
+        watchedState.formState.error = handleError(err);
       });
   });
 
