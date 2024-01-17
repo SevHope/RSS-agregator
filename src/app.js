@@ -8,22 +8,20 @@ import render from './render.js';
 import resources from './locales/index';
 
 const addProxy = (url) => {
-  console.log('сработало эдпрокси');
   const proxyUrl = new URL('/get', 'https://allorigins.hexlet.app');
   proxyUrl.searchParams.append('disableCache', 'true');
   proxyUrl.searchParams.append('url', url);
   return proxyUrl.toString();
 };
 
-const addIds = (posts, feedId) => {
-  posts.forEach((post) => {
-    post.id = uniqueId();
-    post.feedId = feedId;
-  });
-};
+const addIds = (posts, feedId) => posts.map((post) => {
+  const id = uniqueId();
+  post.id = id;
+  post.feedId = feedId;
+  return post;
+});
 
 const updatePosts = (watchedState) => {
-  console.log('сработало обновление постов');
   const promises = watchedState.data.feeds.feedsData.map((feed) => axios.get(addProxy(feed.link))
     .then((response) => {
       const { posts } = parse(response.data.contents);
@@ -31,7 +29,6 @@ const updatePosts = (watchedState) => {
       const postsWithCurrentId = postsFromState.filter((post) => post.feedId === feed.id);
       const displayedPostLinks = postsWithCurrentId.map((post) => post.link);
       const newPosts = posts.filter((post) => !displayedPostLinks.includes(post.link));
-      console.log(newPosts, 'newPosts');
       if (!isEmpty(newPosts)) {
         addIds(newPosts, feed.id);
         watchedState.data.posts.unshift(...newPosts);
@@ -116,7 +113,6 @@ export default async () => {
   };
 
   const watchedState = onChange(state, (path) => {
-    console.log('сработал watchedState');
     render(state, elements, i18nextInstance, path);
   });
 
@@ -129,20 +125,14 @@ export default async () => {
 
   elements.form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    console.log('submit');
     // watchedState.formState.status = 'adding';
     const formData = new FormData(e.target);
-    console.log(formData, 'formData');
     const url = formData.get('url');
-    console.log(url, 'url');
     const dynamicSchema = validateSchema(watchedState.data.feeds.links);
-    console.log(dynamicSchema, 'dynamicSchema');
     dynamicSchema.validate(url)
       .then(() => axios.get(addProxy(url)))
       .then((response) => {
-        console.log(response, 'response');
         const data = parse(response.data.contents, url);
-        console.log(data, 'data');
         handleData(data, watchedState);
         watchedState.data.feeds.links.push(url);
       })
