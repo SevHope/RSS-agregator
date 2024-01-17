@@ -31,6 +31,7 @@ const updatePosts = (watchedState) => {
       const postsWithCurrentId = postsFromState.filter((post) => post.feedId === feed.id);
       const displayedPostLinks = postsWithCurrentId.map((post) => post.link);
       const newPosts = posts.filter((post) => !displayedPostLinks.includes(post.link));
+      console.log(newPosts, 'newPosts');
       if (!isEmpty(newPosts)) {
         addIds(newPosts, feed.id);
         watchedState.data.posts.unshift(...newPosts);
@@ -129,7 +130,7 @@ export default async () => {
   elements.form.addEventListener('submit', async (e) => {
     e.preventDefault();
     console.log('submit');
-    //watchedState.formState.status = 'adding';
+    // watchedState.formState.status = 'adding';
     const formData = new FormData(e.target);
     console.log(formData, 'formData');
     const url = formData.get('url');
@@ -146,7 +147,7 @@ export default async () => {
         watchedState.data.feeds.links.push(url);
       })
       .catch((err) => {
-        //watchedState.formState.status = 'failed';
+        // watchedState.formState.status = 'failed';
         watchedState.formState.error = handleError(err);
       });
   });
