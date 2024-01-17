@@ -8,6 +8,7 @@ import render from './render.js';
 import resources from './locales/index';
 
 const addProxy = (url) => {
+  console.log('сработало эдпрокси');
   const proxyUrl = new URL('/get', 'https://allorigins.hexlet.app');
   proxyUrl.searchParams.append('disableCache', 'true');
   proxyUrl.searchParams.append('url', url);
@@ -21,6 +22,7 @@ const addIds = (posts, feedId) => posts.map((post) => ({
 }));
 
 const updatePosts = (watchedState) => {
+  console.log('сработало обновление постов');
   const promises = watchedState.data.feeds.feedsData.map((feed) => axios.get(addProxy(feed.link))
     .then((response) => {
       const { posts } = parse(response.data.contents);
@@ -112,6 +114,7 @@ export default async () => {
   };
 
   const watchedState = onChange(state, (path) => {
+    console.log('сработал watchedState');
     render(state, elements, i18nextInstance, path);
   });
 
@@ -124,17 +127,25 @@ export default async () => {
 
   elements.form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    console.log('submit');
+    //watchedState.formState.status = 'adding';
     const formData = new FormData(e.target);
+    console.log(formData, 'formData');
     const url = formData.get('url');
+    console.log(url, 'url');
     const dynamicSchema = validateSchema(watchedState.data.feeds.links);
+    console.log(dynamicSchema, 'dynamicSchema');
     dynamicSchema.validate(url)
       .then(() => axios.get(addProxy(url)))
       .then((response) => {
+        console.log(response, 'response');
         const data = parse(response.data.contents, url);
+        console.log(data, 'data');
         handleData(data, watchedState);
         watchedState.data.feeds.links.push(url);
       })
       .catch((err) => {
+        //watchedState.formState.status = 'failed';
         watchedState.formState.error = handleError(err);
       });
   });

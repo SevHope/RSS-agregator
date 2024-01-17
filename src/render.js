@@ -86,13 +86,16 @@ const renderPosts = (state, elements) => {
 
 const renderDisplayedPost = (state, { modalHeader, modalBody, modalHref }, id) => {
   const posts = state.data.posts.filter((post) => post.id === id);
+  console.log(posts, 'posts');
   const [{ description, link, title }] = posts;
+  console.log(description, 'description');
   modalHeader.textContent = title;
   modalBody.textContent = description;
   modalHref.setAttribute('href', link);
 };
 
 const render = (state, elements, i18nextInstance, path) => {
+  console.log(path, 'path');
   if (path === 'formState.error') {
     const errorMessage = i18nextInstance.t(`errors.${state.formState.error}`);
     renderErrors(errorMessage, elements);
