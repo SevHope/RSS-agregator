@@ -32,6 +32,7 @@ const updatePosts = (watchedState) => {
       if (!isEmpty(newPosts)) {
         addIds(newPosts, feed.id);
         watchedState.data.posts.unshift(...newPosts);
+        watchedState.formState.status = 'updating';
       }
     })
     .catch((error) => {
@@ -125,7 +126,7 @@ export default async () => {
 
   elements.form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    // watchedState.formState.status = 'adding';
+    watchedState.formState.status = 'adding';
     const formData = new FormData(e.target);
     const url = formData.get('url');
     const dynamicSchema = validateSchema(watchedState.data.feeds.links);
@@ -135,9 +136,10 @@ export default async () => {
         const data = parse(response.data.contents, url);
         handleData(data, watchedState);
         watchedState.data.feeds.links.push(url);
+        watchedState.formState.status = 'added';
       })
       .catch((err) => {
-        // watchedState.formState.status = 'failed';
+        watchedState.formState.status = 'failed';
         watchedState.formState.error = handleError(err);
       });
   });
@@ -147,6 +149,7 @@ export default async () => {
     if (postId) {
       watchedState.uiState.displayedPost = postId;
       watchedState.uiState.viewedPostIds.add(postId);
+      watchedState.formState.status = 'showmodal';
     }
   });
   updatePosts(watchedState);

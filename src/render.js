@@ -7,12 +7,15 @@ const renderErrors = (message, elements) => {
 };
 
 const renderFeeds = (message, state, elements) => {
-  const { input, feedback, feeds } = elements;
+  const {
+    input, feedback, feeds, submit,
+  } = elements;
   elements.feeds.innerHTML = '';
+  submit.classList.remove('disabled');
   input.value = '';
   input.focus();
   input.style.border = 'none';
-  feedback.classList.remove('text-danger');
+  feedback.classList.remove('text-danger', 'text-warning');
   feedback.classList.add('text-success');
   feedback.textContent = message;
   const feedsCard = document.createElement('div');
@@ -92,19 +95,49 @@ const renderDisplayedPost = (state, { modalHeader, modalBody, modalHref }, id) =
   modalHref.setAttribute('href', link);
 };
 
-const render = (state, elements, i18nextInstance, path) => {
-  console.log(path, 'path');
-  if (path === 'formState.error') {
-    const errorMessage = i18nextInstance.t(`errors.${state.formState.error}`);
-    renderErrors(errorMessage, elements);
-  } if (path === 'data.feeds.feedsData') {
-    const successMessage = i18nextInstance.t('success');
-    renderFeeds(successMessage, state, elements);
-    renderPosts(state, elements);
-  } if (path === 'data.posts' || path === 'uiState.viewedPostIds') {
-    renderPosts(state, elements);
-  } if (path === 'uiState.displayedPost') {
-    renderDisplayedPost(state, elements, state.uiState.displayedPost);
+const renderAdding = (state, { input, submit, feedback }) => {
+  input.setAttribute('readonly', true);
+  submit.classList.add('disabled');
+  feedback.classList.remove('text-danger');
+  feedback.classList.add('text-warning');
+  feedback.textContent = 'Загрузка';
+};
+
+const render = (state, elements, i18nextinstance) => {
+  const { submit, input } = elements;
+  submit.classList.remove('disabled');
+  input.removeAttribute('readonly');
+
+  switch (state.formState.status) {
+    case 'adding':
+      renderAdding(state, elements);
+      break;
+
+    case 'failed':
+    {
+      const errorMessage = i18nextinstance.t(`errors.${state.formState.error}`);
+      renderErrors(errorMessage, elements);
+      break;
+    }
+
+    case 'added':
+    {
+      const successMessage = i18nextinstance.t('success');
+      renderFeeds(successMessage, state, elements);
+      renderPosts(state, elements);
+      break;
+    }
+
+    case 'updating':
+      renderPosts(state, elements);
+      break;
+
+    case 'showmodal':
+      renderDisplayedPost(state, elements, state.uiState.displayedPost);
+      break;
+
+    default:
+      break;
   }
 };
 
