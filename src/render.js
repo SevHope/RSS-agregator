@@ -85,7 +85,11 @@ const renderPosts = (state, elements) => {
 };
 
 const renderDisplayedPost = (state, { modalHeader, modalBody, modalHref }, id) => {
+  console.log('сработал рендер дисплейд');
+  console.log(state.data.posts, 'state.data.posts');
+  console.log(id, 'id');
   const posts = state.data.posts.filter((post) => post.id === id);
+  console.log(state, 'state в рендерДисплейдпостс');
   console.log(posts, 'posts');
   const [{ description, link, title }] = posts;
   console.log(description, 'description');

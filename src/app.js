@@ -15,11 +15,12 @@ const addProxy = (url) => {
   return proxyUrl.toString();
 };
 
-const addIds = (posts, feedId) => posts.map((post) => ({
-  ...post,
-  id: uniqueId(),
-  feedId,
-}));
+const addIds = (posts, feedId) => {
+  posts.forEach((post) => {
+    post.id = uniqueId();
+    post.feedId = feedId;
+  });
+};
 
 const updatePosts = (watchedState) => {
   console.log('сработало обновление постов');
@@ -73,7 +74,7 @@ export default async () => {
   });
 
   const i18nextInstance = i18next.createInstance();
-  i18nextInstance.init({
+  await i18nextInstance.init({
     lng: 'ru',
     debug: true,
     resources,
