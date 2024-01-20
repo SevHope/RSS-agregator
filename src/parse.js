@@ -22,9 +22,9 @@ const parse = (rss, url) => {
   const feedTitle = data.querySelector('title').textContent;
   const feedDescription = data.querySelector('description').textContent;
   const feed = {
-    link: url,
     title: feedTitle,
     description: feedDescription,
+    link: url,
   };
 
   const posts = Array.from(data.querySelectorAll('item')).map((item) => parsePost(item));

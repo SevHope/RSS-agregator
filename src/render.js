@@ -31,7 +31,7 @@ const renderFeeds = (message, state, elements) => {
   const ulForFeeds = document.createElement('ul');
   ulForFeeds.classList.add('list-group', 'border-0', 'rounded-0');
   feedsCard.append(ulForFeeds);
-  state.data.feeds.feedsData.forEach(({ title, description }) => {
+  state.data.feeds.forEach(({ title, description }) => {
     const li = document.createElement('li');
     li.classList.add('list-group-item', 'border-0', 'border-end-0');
     const liTitle = document.createElement('h3');
@@ -87,7 +87,8 @@ const renderPosts = (state, elements) => {
   });
 };
 
-const renderDisplayedPost = (state, { modalHeader, modalBody, modalHref }, id) => {
+const renderDisplayedPost = (state, { modalHeader, modalBody, modalHref }) => {
+  const id = state.uiState.displayedPost;
   const posts = state.data.posts.filter((post) => post.id === id);
   const [{ description, link, title }] = posts;
   modalHeader.textContent = title;
@@ -95,34 +96,30 @@ const renderDisplayedPost = (state, { modalHeader, modalBody, modalHref }, id) =
   modalHref.setAttribute('href', link);
 };
 
-const renderAdding = (state, { input, submit, feedback }) => {
+const renderAdding = ({ input, submit, feedback }) => {
   input.setAttribute('readonly', true);
   submit.classList.add('disabled');
   feedback.classList.remove('text-danger');
   feedback.classList.add('text-warning');
-  feedback.textContent = 'Загрузка';
+  feedback.textContent = 'Обработка запроса';
 };
 
-const render = (state, elements, i18nextinstance) => {
-  const { submit, input } = elements;
-  submit.classList.remove('disabled');
-  input.removeAttribute('readonly');
-
+const renderState = (state, elements, i18nextInstance) => {
   switch (state.formState.status) {
     case 'adding':
-      renderAdding(state, elements);
+      renderAdding(elements);
       break;
 
     case 'failed':
     {
-      const errorMessage = i18nextinstance.t(`errors.${state.formState.error}`);
+      const errorMessage = i18nextInstance.t(`errors.${state.formState.error}`);
       renderErrors(errorMessage, elements);
       break;
     }
 
     case 'added':
     {
-      const successMessage = i18nextinstance.t('success');
+      const successMessage = i18nextInstance.t('success');
       renderFeeds(successMessage, state, elements);
       renderPosts(state, elements);
       break;
@@ -132,10 +129,22 @@ const render = (state, elements, i18nextinstance) => {
       renderPosts(state, elements);
       break;
 
-    case 'showmodal':
-      renderDisplayedPost(state, elements, state.uiState.displayedPost);
+    default:
       break;
+  }
+};
 
+const render = (state, elements, i18nextinstance, path) => {
+  const { submit, input } = elements;
+  submit.classList.remove('disabled');
+  input.removeAttribute('readonly');
+  switch (path) {
+    case 'formState.status':
+      renderState(state, elements, i18nextinstance);
+      break;
+    case 'uiState.displayedPost':
+      renderDisplayedPost(state, elements);
+      break;
     default:
       break;
   }

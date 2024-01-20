@@ -22,7 +22,7 @@ const addIds = (posts, feedId) => posts.map((post) => {
 });
 
 const updatePosts = (watchedState) => {
-  const promises = watchedState.data.feeds.feedsData.map((feed) => axios.get(addProxy(feed.link))
+  const promises = watchedState.data.feeds.map((feed) => axios.get(addProxy(feed.link))
     .then((response) => {
       const { posts } = parse(response.data.contents);
       const postsFromState = watchedState.data.posts;
@@ -44,9 +44,10 @@ const updatePosts = (watchedState) => {
 const handleData = (data, watchedState) => {
   const { feed, posts } = data;
   feed.id = uniqueId();
-  watchedState.data.feeds.feedsData.push(feed);
   addIds(posts, feed.id);
   watchedState.data.posts.push(...posts);
+  watchedState.data.feeds.push(feed);
+  watchedState.formState.status = 'added';
 };
 
 const handleError = (error) => {
@@ -98,10 +99,7 @@ export default async () => {
       error: null,
     },
     data: {
-      feeds: {
-        feedsData: [],
-        links: [],
-      },
+      feeds: [],
       posts: [],
     },
     uiState: {
@@ -124,24 +122,38 @@ export default async () => {
 
   const validateSchema = (links) => schema.concat(yup.string().notOneOf(links));
 
+  const validateURL = (url, addedLinks) => {
+    const dynamicSchema = validateSchema(addedLinks);
+    return dynamicSchema.validate(url);
+  };
+
+  const loadData = (url) => axios.get(addProxy(url))
+    .then((response) => {
+      const data = parse(response.data.contents, url);
+      return data;
+    });
+
   elements.form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    watchedState.formState.status = 'adding';
     const formData = new FormData(e.target);
     const url = formData.get('url');
-    const dynamicSchema = validateSchema(watchedState.data.feeds.links);
-    dynamicSchema.validate(url)
-      .then(() => axios.get(addProxy(url)))
-      .then((response) => {
-        const data = parse(response.data.contents, url);
-        handleData(data, watchedState);
-        watchedState.data.feeds.links.push(url);
-        watchedState.formState.status = 'added';
-      })
-      .catch((err) => {
-        watchedState.formState.status = 'failed';
-        watchedState.formState.error = handleError(err);
-      });
+    const addedLinks = watchedState.data.feeds.map((feed) => feed.link);
+    try {
+      await validateURL(url, addedLinks);
+    } catch (error) {
+      watchedState.formState.error = handleError(error);
+      watchedState.formState.status = 'failed';
+      return;
+    }
+    watchedState.formState.status = 'adding';
+    try {
+      const data = await loadData(url);
+      handleData(data, watchedState);
+      watchedState.formState.status = 'added';
+    } catch (error) {
+      watchedState.formState.error = handleError(error);
+      watchedState.formState.status = 'failed';
+    }
   });
 
   elements.posts.addEventListener('click', (e) => {
@@ -149,7 +161,6 @@ export default async () => {
     if (postId) {
       watchedState.uiState.displayedPost = postId;
       watchedState.uiState.viewedPostIds.add(postId);
-      watchedState.formState.status = 'showmodal';
     }
   });
   updatePosts(watchedState);
