@@ -91,6 +91,9 @@ const renderDisplayedPost = (state, { modalHeader, modalBody, modalHref }) => {
   const id = state.uiState.displayedPost;
   const posts = state.data.posts.filter((post) => post.id === id);
   const [{ description, link, title }] = posts;
+  const element = document.querySelector(`a[data-id="${id}"]`);
+  element.classList.remove('fw-bold');
+  element.classList.add('fw-normal');
   modalHeader.textContent = title;
   modalBody.textContent = description;
   modalHref.setAttribute('href', link);
