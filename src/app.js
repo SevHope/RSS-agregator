@@ -41,9 +41,11 @@ const updatePosts = (watchedState) => {
   return Promise.all(promises).finally(() => setTimeout(updatePosts, 5000, watchedState));
 };
 
-const handleData = (data, watchedState) => {
+const handleData = (data, watchedState, url) => {
   const { feed, posts } = data;
   feed.id = uniqueId();
+  console.log(feed, 'feed v handleData');
+  feed.link = url;
   addIds(posts, feed.id);
   watchedState.data.posts.push(...posts);
   watchedState.data.feeds.push(feed);
@@ -129,7 +131,7 @@ export default async () => {
 
   const loadData = (url) => axios.get(addProxy(url))
     .then((response) => {
-      const data = parse(response.data.contents, url);
+      const data = parse(response.data.contents);
       return data;
     });
 
@@ -148,7 +150,7 @@ export default async () => {
     watchedState.formState.status = 'adding';
     try {
       const data = await loadData(url);
-      handleData(data, watchedState);
+      handleData(data, watchedState, url);
       watchedState.formState.status = 'added';
     } catch (error) {
       watchedState.formState.error = handleError(error);
