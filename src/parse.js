@@ -16,7 +16,7 @@ const parseFeed = (data) => {
     title: feedTitle,
     description: feedDescription,
   };
-}
+};
 
 const parse = (rss) => {
   const parser = new DOMParser();
