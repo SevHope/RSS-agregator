@@ -148,6 +148,12 @@ const render = (state, elements, i18nextinstance, path) => {
     case 'uiState.displayedPost':
       renderDisplayedPost(state, elements);
       break;
+    case 'posts':
+      renderPosts(state, elements);
+      break;
+    case 'feeds':
+      renderFeeds(state, elements, i18nextinstance);
+      break;
     default:
       break;
   }

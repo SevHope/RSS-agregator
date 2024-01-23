@@ -42,29 +42,28 @@ const updatePosts = (watchedState) => {
 };
 
 const handleData = (data, watchedState, url) => {
-  const { feed, posts } = data;
+  const { title, description, posts } = data;
+  const feed = { title, description };
   feed.id = uniqueId();
-  console.log(feed, 'feed v handleData');
   feed.link = url;
   addIds(posts, feed.id);
   watchedState.data.posts.push(...posts);
   watchedState.data.feeds.push(feed);
-  watchedState.formState.status = 'added';
+  watchedState.formState.status = 'filing';
 };
 
 const handleError = (error) => {
-  if (error.isParsingError) {
-    return 'notRss';
+  switch (error.name) {
+    case 'parseError':
+      return 'notRss';
+    case 'AxiosError':
+      return 'networkError';
+    default:
+      return error.message.key ?? 'unknown';
   }
-
-  if (axios.isAxiosError(error)) {
-    return 'networkError';
-  }
-
-  return error.message.key ?? 'unknown';
 };
 
-export default async () => {
+export default () => {
   yup.setLocale({
     string: {
       url: () => ({ key: 'notUrl' }),
@@ -76,7 +75,7 @@ export default async () => {
   });
 
   const i18nextInstance = i18next.createInstance();
-  await i18nextInstance.init({
+  i18nextInstance.init({
     lng: 'ru',
     debug: true,
     resources,
@@ -100,6 +99,7 @@ export default async () => {
       status: 'filling',
       error: null,
     },
+    loadingStatus: null,
     data: {
       feeds: [],
       posts: [],
@@ -132,30 +132,33 @@ export default async () => {
   const loadData = (url) => axios.get(addProxy(url))
     .then((response) => {
       const data = parse(response.data.contents);
+      watchedState.loadingStatus = 'loaded';
       return data;
+    })
+    .catch((error) => {
+      watchedState.loadingStatus = 'failed';
+      throw error;
     });
 
-  elements.form.addEventListener('submit', async (e) => {
+  elements.form.addEventListener('submit', (e) => {
     e.preventDefault();
+    watchedState.formState.status = 'adding';
     const formData = new FormData(e.target);
     const url = formData.get('url');
     const addedLinks = watchedState.data.feeds.map((feed) => feed.link);
-    try {
-      await validateURL(url, addedLinks);
-    } catch (error) {
-      watchedState.formState.error = handleError(error);
-      watchedState.formState.status = 'failed';
-      return;
-    }
-    watchedState.formState.status = 'adding';
-    try {
-      const data = await loadData(url);
-      handleData(data, watchedState, url);
-      watchedState.formState.status = 'added';
-    } catch (error) {
-      watchedState.formState.error = handleError(error);
-      watchedState.formState.status = 'failed';
-    }
+    validateURL(url, addedLinks)
+      .then(() => {
+        watchedState.loadingStatus = 'start';
+        return loadData(url);
+      })
+      .then((data) => {
+        handleData(data, watchedState, url);
+        watchedState.formState.status = 'added';
+      })
+      .catch((error) => {
+        watchedState.formState.error = handleError(error);
+        watchedState.formState.status = 'failed';
+      });
   });
 
   elements.posts.addEventListener('click', (e) => {
